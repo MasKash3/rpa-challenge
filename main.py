@@ -2,22 +2,16 @@
 import time
 from RPA.Browser.Selenium import Selenium
 
-from RPA.Robocorp.WorkItems import WorkItems
-
 from util import (
-    set_month_range,
     write_csv_data,
-    replace_date_with_hour,
     download_image_from_url,
     check_for_dollar,
     check_phrases,
     create_image_folder,
-    get_all_files_from_folder,
 )
 
 URL = "https://latimes.com/"
 SEARCH_PHRASE = "artificial intelligence"
-NUMBER_OF_MONTHS = 3
 CATEGORY = ["00000168-865c-d5d8-a76d-efddd6550000", "00000168-8683-d2cb-a969-de8b247e0000"] # Business, Food
 
 class SeleniumScraper:
@@ -38,7 +32,7 @@ class SeleniumScraper:
             search_field_path = "//input[@data-element='search-form-input']"
             self.browser_lib.input_text(locator=search_field_path, text=phrase)
             search_button_path = "//button[@data-element='search-submit-button']"
-            self.browser_lib.click_button_when_visible(locator=search_button_path)
+            self.browser_lib.click_element_if_visible(locator=search_button_path)
         except ValueError as e:
             raise f"Error on execution of begin_search -> {e}"
 
@@ -50,14 +44,13 @@ class SeleniumScraper:
                 try:
                     see_all_button = "//button[@data-toggle-trigger='see-all']"
                     self.browser_lib.click_button_when_visible(locator=see_all_button)
+                    time.sleep(0.1)
                     topics_list = "//*[@data-name='Topics']//li"
                     self.browser_lib.wait_until_page_contains_element(locator=topics_list)
                     topic = f"//input[contains(@type,'checkbox') and contains(@value,'{value}')]"
-                    self.browser_lib.wait_until_page_contains_element(locator=topic)
-                    self.browser_lib.click_element(locator=topic)
+                    self.browser_lib.click_element_when_visible(locator=topic)
                 except ValueError as e:
-                    print(f"Category not found")
-                    print(e)
+                    print(f"Error on catergory selection -> {e}")
 
     def sort_newest_news(self, list_value="1") -> None:
         try:
@@ -67,34 +60,6 @@ class SeleniumScraper:
         except ValueError as e:
             raise f"Error on execution of sort_newest_news -> {e}"
 
-    def set_date_range(self, number_of_months: int) -> None:
-        try:
-            date_button = "//button[@data-testid='search-date-dropdown-a']"
-            self.browser_lib.click_button_when_visible(locator=date_button)
-            specific_dates_button = "//button[@value='Specific Dates']"
-            self.browser_lib.click_button_when_visible(locator=specific_dates_button)
-            input_date_range_start = "//input[@id='startDate']"
-            input_date_range_end = "//input[@id='endDate']"
-            date_start, date_end = set_month_range(number_of_months)
-            self.browser_lib.input_text(input_date_range_start, date_start)
-            self.browser_lib.input_text(input_date_range_end, date_end)
-            self.browser_lib.click_button_when_visible(locator=date_button)
-
-        except ValueError as e:
-            raise f"Error on execution of data range -> {e}"
-
-    def load_all_news(self):
-        show_more_button = "//button[normalize-space()='Show More']"
-        while self.browser_lib.does_page_contain_button(show_more_button):
-            try:
-                self.browser_lib.wait_until_page_contains_element(
-                    locator=show_more_button
-                )
-                self.browser_lib.scroll_element_into_view(locator=show_more_button)
-                self.browser_lib.click_button_when_visible(show_more_button)
-            except:
-                print("Page show more button done")
-
     def get_element_value(self, path: str) -> str:
         if self.browser_lib.does_page_contain_element(path):
             return self.browser_lib.get_text(path)
@@ -102,6 +67,9 @@ class SeleniumScraper:
 
     def get_image_value(self, path: str) -> str:
         if self.browser_lib.does_page_contain_element(path):
+            return self.browser_lib.get_element_attribute(path, "src")
+        else:
+            self.browser_lib.wait_until_page_contains_element(path)
             return self.browser_lib.get_element_attribute(path, "src")
         return ""
 
@@ -152,13 +120,13 @@ class SeleniumScraper:
 
     def main(self) -> None:
         try:
-            create_image_folder()
+            create_image_folder()            
             self.open_website(url=URL)
             self.begin_search(phrase=SEARCH_PHRASE)
             self.select_category(categorys=CATEGORY)
             self.sort_newest_news()
-            self.set_date_range(NUMBER_OF_MONTHS)
             self.extract_website_data(SEARCH_PHRASE)
+            
         finally:
             self.close_browser()
 

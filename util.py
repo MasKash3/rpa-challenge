@@ -8,31 +8,10 @@ import glob
 
 from RPA.Excel.Files import Files
 
-
 def create_image_folder() -> None:
     dir = "./images"
     if not os.path.exists(dir):
         os.makedirs(dir)
-
-
-def set_month_range(number_of_months: int) -> tuple[str, str]:
-    today = datetime.date.today()
-    end = today.strftime("%m/%d/%Y")
-    if number_of_months < 2:
-        start = today.replace(day=1).strftime("%m/%d/%Y")
-    else:
-        start = (
-            (today - datetime.timedelta(days=30 * (number_of_months - 1)))
-            .replace(day=1)
-            .strftime("%m/%d/%Y")
-        )
-    return start, end
-
-
-def replace_date_with_hour(date: str) -> str:
-    if re.match("\d\w ago", date):
-        return f"{datetime.datetime.now().strftime('%b')} {datetime.datetime.now().day}"
-    return date
 
 
 def write_csv_data(data: list) -> None:
