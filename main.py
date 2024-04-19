@@ -1,4 +1,3 @@
-# docs for RPA lib > https://rpaframework.org/libdoc/RPA_Browser_Selenium.html
 import time
 from RPA.Browser.Selenium import Selenium
 
